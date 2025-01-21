@@ -19,6 +19,14 @@ class DatabaseSeeder extends Seeder
             'name' => 'admin',
             'email' => 'admin@admin.com',
         ]);
+
+        $this->call([
+            DepartmentSeeder::class,
+            FacilityChangeAuthorizationSeeder::class,
+            HalalAssesmentSeeder::class,
+            RegulatoryAssesmentSeeder::class,
+            ScopeOfChangeSeeder::class,
+            StimuliOfChangeSeeder::class,
+        ]);
     }
 }
-
