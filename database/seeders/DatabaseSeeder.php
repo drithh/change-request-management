@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'admin',
             'email' => 'admin@admin.com',
+            'is_admin' => true,
+            'is_verified' => true,
         ]);
 
         $this->call([
