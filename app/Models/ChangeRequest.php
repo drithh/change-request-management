@@ -60,7 +60,10 @@ class ChangeRequest extends Model
 		'risk_priority_number' => 'int',
 		'facility_change_authorization_id' => 'int',
 		'regulatory_assesment_id' => 'int',
-		'halal_assesment_id' => 'int'
+		'halal_assesment_id' => 'int',
+        'status_url' => 'array',
+        'change_request_url' => 'array',
+        'support_document_url' => 'array',
 	];
 
 	protected $fillable = [

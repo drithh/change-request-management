@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ChangeRequestResource extends Resource
 {
@@ -42,7 +43,6 @@ class ChangeRequestResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Informasi Dasar / Basic Information')
                     ->schema([
-                        // create at now form
                         Forms\Components\TextInput::make('created_at')
                             ->default(now())
                             ->label('Tanggal / Date')
@@ -65,8 +65,18 @@ class ChangeRequestResource extends Resource
                             ->readOnly()
                             ->formatStateUsing(fn($state) => \App\Models\Department::find($state)?->name ?? '')
                             ->required(),
-                        // scope of chanegs,
-                        // stimuli of change,
+                        Forms\Components\CheckboxList::make('scope_of_change')
+                            ->label('Cakupan Perubahan / Scope Of Change')
+                            ->options(function () {
+                                return \App\Models\ScopeOfChange::pluck('value', 'id');
+                            })
+                            ->required(),
+                        Forms\Components\CheckboxList::make('stimuli_of_change')
+                            ->label('Stimuli Perubahan / Stimuli Of Change')
+                            ->options(function () {
+                                return \App\Models\StimuliOfChange::pluck('value', 'id');
+                            })
+                            ->required(),
                     ]),
                 Forms\Components\Section::make('Deskripsi Perubahan / Description Of Change')
                     ->schema([
@@ -74,26 +84,59 @@ class ChangeRequestResource extends Resource
                             ->label('Status Saat ini / Current Status')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('status_url')
-                            ->label('Link Status Saat ini / Current Status URL')
-                            ->required()
-                            ->maxLength(255),
+                        Forms\Components\FileUpload::make('status_url')
+                            ->label('File Status Saat ini / Current Status File')
+                            ->disk('public')
+                            ->getUploadedFileNameForStorageUsing(
+                                fn(TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                                    ->prepend(
+                                        now()->format('YmdHis')
+                                    ),
+                            )
+                            ->visibility('public')
+                            ->directory('change_request_status')
+                            ->multiple()
+                            ->openable()
+                            ->downloadable()
+                            ->columnSpanFull(),
                         Forms\Components\Textarea::make('change_request')
                             ->label('Usuluan Perubahan / Change Request')
                             ->required()
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('change_request_url')
+                        Forms\Components\FileUpload::make('change_request_url')
                             ->label('Link Usuluan Perubahan / Change Request URL')
-                            ->required()
-                            ->maxLength(255),
+                            ->disk('public')
+                            ->getUploadedFileNameForStorageUsing(
+                                fn(TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                                    ->prepend(
+                                        now()->format('YmdHis')
+                                    ),
+                            )
+                            ->visibility('public')
+                            ->directory('change_request')
+                            ->multiple()
+                            ->openable()
+                            ->downloadable()
+                            ->columnSpanFull(),
                         Forms\Components\Textarea::make('reason')
                             ->label('Alasan Perubahan / Reason Of Change')
                             ->required()
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('support_document_url')
+                        Forms\Components\FileUpload::make('support_document_url')
                             ->label('Lampiran Data Pendukung / Supporting data attachment')
-                            ->required()
-                            ->maxLength(255),
+                            ->disk('public')
+                            ->getUploadedFileNameForStorageUsing(
+                                fn(TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                                    ->prepend(
+                                        now()->format('YmdHis')
+                                    ),
+                            )
+                            ->visibility('public')
+                            ->directory('change_request_support_document')
+                            ->multiple()
+                            ->openable()
+                            ->downloadable()
+                            ->columnSpanFull(),
                     ]),
                 Forms\Components\Section::make('Kajian Terhadap Dampak-Risiko / Impact-Risk Assesment')
                     ->schema([
@@ -204,7 +247,12 @@ class ChangeRequestResource extends Resource
 
                 Forms\Components\Section::make('Departemen Lain yang Terkait Dalam Usulan Perubahan / The Other Departement That Related to Change Control')
                     ->schema([
-                        //    othere departments
+                        Forms\Components\CheckboxList::make('other_departments')
+                            ->label('Departemen Lain yang Terkait Dalam Usulan Perubahan / The Other Departement That Related to Change Control')
+                            ->options(function () {
+                                return \App\Models\Department::pluck('name', 'id');
+                            })
+                            ->required(),
                     ]),
             ]);
     }
