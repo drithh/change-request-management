@@ -39,6 +39,7 @@ return new class extends Migration
 
             $table->enum('risk_evaluation_criteria_detectability', ['high', 'medium', 'low'])->default('high');
             $table->integer('risk_priority_number');
+            $table->string('risk_category');
 
             $table->foreignId("facility_change_authorization_id")->constrained("facility_change_authorizations");
             $table->foreignId("regulatory_assesment_id")->constrained("regulatory_assesments");
