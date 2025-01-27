@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $control_that_has_been_implemented
  * @property string $risk_evaluation_criteria_detectability
  * @property int $risk_priority_number
+ * @property string $risk_category
  * @property int $facility_change_authorization_id
  * @property int $regulatory_assesment_id
  * @property int $halal_assesment_id
@@ -80,6 +81,7 @@ class ChangeRequest extends Model
 		'control_that_has_been_implemented',
 		'risk_evaluation_criteria_detectability',
 		'risk_priority_number',
+		'risk_category',
 		'facility_change_authorization_id',
 		'regulatory_assesment_id',
 		'halal_assesment_id',
@@ -114,21 +116,21 @@ class ChangeRequest extends Model
 	public function scope_of_changes()
 	{
 		return $this->belongsToMany(ScopeOfChange::class, 'change_request_scope_of_changes')
-					->withPivot('id')
-					->withTimestamps();
+			->withPivot('id')
+			->withTimestamps();
 	}
 
 	public function stimuli_of_changes()
 	{
 		return $this->belongsToMany(StimuliOfChange::class, 'change_request_stimuli_of_changes')
-					->withPivot('id')
-					->withTimestamps();
+			->withPivot('id')
+			->withTimestamps();
 	}
 
 	public function departments()
 	{
 		return $this->belongsToMany(Department::class, 'change_request_departments', 'change_request_id', 'departement_id')
-					->withPivot('id')
-					->withTimestamps();
+			->withPivot('id')
+			->withTimestamps();
 	}
 }
