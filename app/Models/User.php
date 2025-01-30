@@ -23,6 +23,7 @@ use Filament\Panel;
  * @property string $email
  * @property bool $is_admin
  * @property bool|null $is_verified
+ * @property bool $is_department_head
  * @property int|null $department_id
  * @property string $password
  * @property string|null $remember_token
@@ -42,6 +43,7 @@ class User extends Authenticatable implements FilamentUser
 	protected $casts = [
 		'is_admin' => 'bool',
 		'is_verified' => 'bool',
+		'is_department_head' => 'bool',
 		'department_id' => 'int'
 	];
 
@@ -55,6 +57,7 @@ class User extends Authenticatable implements FilamentUser
 		'email',
 		'is_admin',
 		'is_verified',
+		'is_department_head',
 		'department_id',
 		'password',
 		'remember_token'

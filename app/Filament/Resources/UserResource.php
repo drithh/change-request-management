@@ -36,6 +36,7 @@ class UserResource extends Resource
                 Forms\Components\Toggle::make('is_admin')
                     ->required(),
                 Forms\Components\Toggle::make('is_verified'),
+                Forms\Components\Toggle::make('is_department_head'),
                 Forms\Components\Select::make('department_id')
                     ->label('Department')
                     ->required()
@@ -62,6 +63,8 @@ class UserResource extends Resource
                 Tables\Columns\IconColumn::make('is_admin')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('is_verified')
+                    ->boolean(),
+                Tables\Columns\IconColumn::make('is_department_head')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('department.name')
                     ->searchable(),

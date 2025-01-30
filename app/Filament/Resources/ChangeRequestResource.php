@@ -11,11 +11,13 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Filament\Tables\Enums\FiltersLayout;
 
 class ChangeRequestResource extends Resource
 {
@@ -79,11 +81,11 @@ class ChangeRequestResource extends Resource
                     ]),
                 Forms\Components\Section::make('Deskripsi Perubahan / Description Of Change')
                     ->schema([
-                        Forms\Components\TextInput::make('status')
+                        Forms\Components\TextInput::make('current_status')
                             ->label('Status Saat ini / Current Status')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\FileUpload::make('status_url')
+                        Forms\Components\FileUpload::make('current_status_url')
                             ->label('File Status Saat ini / Current Status File')
                             ->disk('public')
                             ->getUploadedFileNameForStorageUsing(
@@ -288,10 +290,10 @@ class ChangeRequestResource extends Resource
                     ->label('Departemen')
                     ->formatStateUsing(fn($state) => \App\Models\Department::find($state)?->name ?? '')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('current_status')
                     ->searchable()
                     ->label('Status'),
-                Tables\Columns\TextColumn::make('status_url')
+                Tables\Columns\TextColumn::make('current_status_url')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->label('File Status'),
                 Tables\Columns\TextColumn::make('change_request_url')
@@ -358,8 +360,28 @@ class ChangeRequestResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
-            ])
+                SelectFilter::make('scope_of_change')
+                    ->label('Cakupan Perubahan')
+                    ->relationship('scope_of_changes', 'value'),
+                SelectFilter::make('department_id')
+                    ->label('Departemen')
+                    ->relationship('departments', 'name'),
+                SelectFilter::make('risk_category')
+                    ->label('Kategori Resiko')
+                    ->options([
+                        'Kritikal' => 'Kritikal',
+                        'Mayor' => 'Mayor',
+                        'Minor' => 'Minor',
+                    ]),
+
+            ], layout: FiltersLayout::AboveContent)
+            // ->tabs([
+            //     'All' => Tables\Tabs\Tab::make(),
+            //     'Active' => Tables\Tabs\Tab::make()
+            //         ->modifyQuery(fn($query) => $query->where('status', 'active')),
+            //     'Inactive' => Tables\Tabs\Tab::make()
+            //         ->modifyQuery(fn($query) => $query->where('status', 'inactive')),
+            // ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

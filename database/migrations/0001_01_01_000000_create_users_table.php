@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->boolean('is_admin')->default(false);
             $table->boolean('is_verified')->nullable()->default(false);
+            $table->boolean('is_department_head')->default(false);
             $table->foreignId('department_id')->nullable()->constrained()->nullOnDelete();
             $table->string('password');
             $table->rememberToken();

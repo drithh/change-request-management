@@ -19,8 +19,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $title
  * @property int $user_id
  * @property int $department_id
- * @property string $status
- * @property string $status_url
+ * @property string $current_status
+ * @property string $current_status_url
  * @property string $change_request
  * @property string $change_request_url
  * @property string $reason
@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $regulatory_assesment_id
  * @property int $halal_assesment_id
  * @property string|null $third_party_name
+ * @property string $status
  * 
  * @property User $user
  * @property Department $department
@@ -61,17 +62,17 @@ class ChangeRequest extends Model
 		'facility_change_authorization_id' => 'int',
 		'regulatory_assesment_id' => 'int',
 		'halal_assesment_id' => 'int',
-        'status_url' => 'array',
-        'change_request_url' => 'array',
-        'support_document_url' => 'array',
+		'current_status_url' => 'array',
+		'change_request_url' => 'array',
+		'support_document_url' => 'array',
 	];
 
 	protected $fillable = [
 		'title',
 		'user_id',
 		'department_id',
-		'status',
-		'status_url',
+		'current_status',
+		'current_status_url',
 		'change_request',
 		'change_request_url',
 		'reason',
@@ -88,7 +89,8 @@ class ChangeRequest extends Model
 		'facility_change_authorization_id',
 		'regulatory_assesment_id',
 		'halal_assesment_id',
-		'third_party_name'
+		'third_party_name',
+		'status'
 	];
 
 	public function user()

@@ -20,8 +20,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('department_id')->constrained('departments');
 
-            $table->string('status');
-            $table->string('status_url');
+            $table->string('current_status');
+            $table->string('current_status_url');
 
             $table->text('change_request');
             $table->string('change_request_url');
@@ -46,6 +46,8 @@ return new class extends Migration
             $table->foreignId("halal_assesment_id")->constrained("halal_assesments");
 
             $table->string('third_party_name')->nullable();
+
+            $table->enum('status', ['submitted', 'approved'])->default('submitted');
         });
     }
 
