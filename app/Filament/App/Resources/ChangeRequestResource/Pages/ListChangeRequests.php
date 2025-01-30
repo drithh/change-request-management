@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Filament\Resources\ChangeRequestResource\Pages;
+namespace App\Filament\App\Resources\ChangeRequestResource\Pages;
 
-use App\Filament\Resources\ChangeRequestResource;
-use App\Models\ChangeRequest;
-use Filament\Actions;
+use App\Filament\App\Resources\ChangeRequestResource;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
 

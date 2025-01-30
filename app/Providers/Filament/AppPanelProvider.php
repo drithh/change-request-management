@@ -40,7 +40,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->login()
             ->registration(
-                // Register::class
+                Register::class
             )
             ->colors([
                 'danger' => Color::Red,

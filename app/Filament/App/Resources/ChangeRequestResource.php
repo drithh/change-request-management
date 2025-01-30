@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\App\Resources;
 
-use App\Filament\Resources\ChangeRequestResource\Pages;
-use App\Filament\Resources\ChangeRequestResource\RelationManagers;
+use App\Filament\App\Resources\ChangeRequestResource\Actions\ApproveAction;
+use App\Filament\App\Resources\ChangeRequestResource\Pages;
 use App\Models\ChangeRequest;
-use App\Filament\Resources\ChangeRequestResource\Actions\ApproveAction;
 use Auth;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -26,6 +25,13 @@ class ChangeRequestResource extends Resource
     protected static ?string $model = ChangeRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $slug = 'change-requests';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Change Management';
+    }
 
     private static function calculateRiskValues($state, $set, $get): void
     {
@@ -257,7 +263,6 @@ class ChangeRequestResource extends Resource
                             ->required()
                             ->maxLength(255),
                     ]),
-
                 Forms\Components\Section::make('Departemen Lain yang Terkait Dalam Usulan Perubahan / The Other Departement That Related to Change Control')
                     ->schema([
                         Forms\Components\CheckboxList::make('departments')
@@ -272,6 +277,18 @@ class ChangeRequestResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                // Show only records where:
+                // 1. User is from the department (department_id)
+                // 2. OR the record is related to user's department through change_request_departments
+                $userDepartmentId = Auth::user()->department_id;
+                return $query->where(function ($query) use ($userDepartmentId) {
+                    $query->where('department_id', $userDepartmentId)
+                        ->orWhereHas('departments', function ($query) use ($userDepartmentId) {
+                            $query->where('department_id', $userDepartmentId);
+                        });
+                });
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -295,42 +312,6 @@ class ChangeRequestResource extends Resource
                 Tables\Columns\TextColumn::make('current_status')
                     ->searchable()
                     ->label('Status'),
-                Tables\Columns\TextColumn::make('current_status_url')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('File Status'),
-                Tables\Columns\TextColumn::make('change_request_url')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Link Usulan Perubahan'),
-                Tables\Columns\TextColumn::make('support_document_url')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Lampiran Data Pendukung'),
-                Tables\Columns\TextColumn::make('source_of_risk')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable()
-                    ->label('Sumber Resiko'),
-                Tables\Columns\TextColumn::make('impact_of_risk')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable()
-                    ->label('Dampak Resiko'),
-                Tables\Columns\TextColumn::make('risk_evaluation_criteria_severity')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable()
-                    ->label('Kriteria Penilaian Resiko - Saverity'),
-                Tables\Columns\TextColumn::make('causes_of_risk')
-                    ->searchable()
-                    ->label('Penyebab Resiko'),
-                Tables\Columns\TextColumn::make('risk_evaluation_criteria_probability')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Kriteria Penilaian Resiko - Probability'),
-                Tables\Columns\TextColumn::make('control_that_has_been_implemented')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Kontrol Yang Telah Dilakukan'),
-                Tables\Columns\TextColumn::make('risk_evaluation_criteria_detectability')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Kriteria Penilaian Resiko - Detectability'),
                 Tables\Columns\TextColumn::make('risk_priority_number')
                     ->numeric()
                     ->sortable()
@@ -338,36 +319,11 @@ class ChangeRequestResource extends Resource
                 Tables\Columns\TextColumn::make('risk_category')
                     ->searchable()
                     ->label('Kategori Resiko'),
-                Tables\Columns\TextColumn::make('facility_change_authorization_id')
-                    ->numeric()
-                    ->sortable()
-                    ->label('Perizinan Perubahan Fasilitas')
-                    ->formatStateUsing(fn($state) => \App\Models\FacilityChangeAuthorization::find($state)?->value ?? '')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('regulatory_assesment_id')
-                    ->numeric()
-                    ->sortable()
-                    ->label('Kategori Pelaporan Registrasi')
-                    ->formatStateUsing(fn($state) => \App\Models\RegulatoryAssesment::find($state)?->value ?? '')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('halal_assesment_id')
-                    ->numeric()
-                    ->sortable()
-                    ->label('Apakah Material atau Kegiatan digunakan terkait produk')
-                    ->formatStateUsing(fn($state) => \App\Models\HalalAssesment::find($state)?->value ?? '')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('third_party_name')
-                    ->searchable()
-                    ->label('Nama Pihak Ketiga')
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('scope_of_change')
                     ->label('Cakupan Perubahan')
                     ->relationship('scope_of_changes', 'value'),
-                SelectFilter::make('department_id')
-                    ->label('Departemen')
-                    ->relationship('departments', 'name'),
                 SelectFilter::make('risk_category')
                     ->label('Kategori Resiko')
                     ->options([
@@ -375,25 +331,18 @@ class ChangeRequestResource extends Resource
                         'Mayor' => 'Mayor',
                         'Minor' => 'Minor',
                     ]),
-
             ], layout: FiltersLayout::AboveContent)
             ->actions([
+                ApproveAction::tableAction(),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                ApproveAction::tableAction(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
