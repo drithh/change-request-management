@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -67,15 +68,13 @@ class ChangeRequestResource extends Resource
                             ->required(),
                         Forms\Components\CheckboxList::make('scope_of_change')
                             ->label('Cakupan Perubahan / Scope Of Change')
-                            ->options(function () {
-                                return \App\Models\ScopeOfChange::pluck('value', 'id');
-                            })
+                            ->relationship('scope_of_changes', 'id')
+                            ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->value}")
                             ->required(),
                         Forms\Components\CheckboxList::make('stimuli_of_change')
                             ->label('Stimuli Perubahan / Stimuli Of Change')
-                            ->options(function () {
-                                return \App\Models\StimuliOfChange::pluck('value', 'id');
-                            })
+                            ->relationship('stimuli_of_changes', 'id')
+                            ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->value}")
                             ->required(),
                     ]),
                 Forms\Components\Section::make('Deskripsi Perubahan / Description Of Change')
@@ -236,6 +235,16 @@ class ChangeRequestResource extends Resource
                                 'ya' => 'Ya',
                                 'tidak' => 'Tidak',
                             ])
+                            ->afterStateHydrated(function ($component, $state, $get) {
+                                if (!filled($state)) {
+                                    $third_party_name = $get('third_party_name');
+                                    if ($third_party_name) {
+                                        $component->state(['ya']);
+                                    } else {
+                                        $component->state(['tidak']);
+                                    }
+                                }
+                            })
                             ->live()
                             ->required(),
                         Forms\Components\TextInput::make('third_party_name')
@@ -247,11 +256,10 @@ class ChangeRequestResource extends Resource
 
                 Forms\Components\Section::make('Departemen Lain yang Terkait Dalam Usulan Perubahan / The Other Departement That Related to Change Control')
                     ->schema([
-                        Forms\Components\CheckboxList::make('other_departments')
+                        Forms\Components\CheckboxList::make('departments')
                             ->label('Departemen Lain yang Terkait Dalam Usulan Perubahan / The Other Departement That Related to Change Control')
-                            ->options(function () {
-                                return \App\Models\Department::pluck('name', 'id');
-                            })
+                            ->relationship('departments', 'id')
+                            ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->name}")
                             ->required(),
                     ]),
             ]);
@@ -270,49 +278,84 @@ class ChangeRequestResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Judul'),
                 Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Nama ')
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => \App\Models\User::find($state)?->name ?? ''),
                 Tables\Columns\TextColumn::make('department_id')
-                    ->numeric()
+                    ->label('Departemen')
+                    ->formatStateUsing(fn($state) => \App\Models\Department::find($state)?->name ?? '')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Status'),
                 Tables\Columns\TextColumn::make('status_url')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('File Status'),
                 Tables\Columns\TextColumn::make('change_request_url')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Link Usulan Perubahan'),
                 Tables\Columns\TextColumn::make('support_document_url')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Lampiran Data Pendukung'),
                 Tables\Columns\TextColumn::make('source_of_risk')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable()
+                    ->label('Sumber Resiko'),
                 Tables\Columns\TextColumn::make('impact_of_risk')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable()
+                    ->label('Dampak Resiko'),
                 Tables\Columns\TextColumn::make('risk_evaluation_criteria_severity')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable()
+                    ->label('Kriteria Penilaian Resiko - Saverity'),
                 Tables\Columns\TextColumn::make('causes_of_risk')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Penyebab Resiko'),
                 Tables\Columns\TextColumn::make('risk_evaluation_criteria_probability')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Kriteria Penilaian Resiko - Probability'),
                 Tables\Columns\TextColumn::make('control_that_has_been_implemented')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Kontrol Yang Telah Dilakukan'),
                 Tables\Columns\TextColumn::make('risk_evaluation_criteria_detectability')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Kriteria Penilaian Resiko - Detectability'),
                 Tables\Columns\TextColumn::make('risk_priority_number')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->label('RPN'),
+                Tables\Columns\TextColumn::make('risk_category')
+                    ->searchable()
+                    ->label('Kategori Resiko'),
                 Tables\Columns\TextColumn::make('facility_change_authorization_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->label('Perizinan Perubahan Fasilitas')
+                    ->formatStateUsing(fn($state) => \App\Models\FacilityChangeAuthorization::find($state)?->value ?? '')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('regulatory_assesment_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->label('Kategori Pelaporan Registrasi')
+                    ->formatStateUsing(fn($state) => \App\Models\RegulatoryAssesment::find($state)?->value ?? '')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('halal_assesment_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->label('Apakah Material atau Kegiatan digunakan terkait produk')
+                    ->formatStateUsing(fn($state) => \App\Models\HalalAssesment::find($state)?->value ?? '')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('third_party_name')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Nama Pihak Ketiga')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

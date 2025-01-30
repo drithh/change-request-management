@@ -40,4 +40,9 @@ class CreateChangeRequest extends CreateRecord
             return $changeRequest;
         });
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
